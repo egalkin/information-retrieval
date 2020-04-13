@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from memory_profiler import profile
 import argparse
 import codecs
 
-
 class Index:
     def __init__(self, index_file, enumerated_words):
-        with open(index_file, 'r', encoding='utf8') as file:
+        with codecs.open(index_file, mode='r', encoding='utf8') as file:
             self.index = [[] for _ in range(len(enumerated_words.keys()))]
-            lines = file.readlines()
-            self.documents_number = len(lines)
-            for line in lines:
+            self.documents_number = 0
+            for line in file:
+                self.documents_number += 1
                 processed_line = line.split('\t')
                 doc_num = int(processed_line[0])
                 doc_words = (processed_line[1] + processed_line[2]).rstrip().split(' ')
+                processed_line = None
                 self.process_document(doc_words, doc_num, enumerated_words)
             for key in range(len(self.index)):
                 self.index[key].sort()
@@ -41,7 +40,6 @@ class AbstractOperation(Expression):
 
     def evaluate(self, index, enumerated_words):
         return self.op_imp(self.ex1.evaluate(index, enumerated_words), self.ex2.evaluate(index, enumerated_words))
-
 
 class Or(AbstractOperation):
 
@@ -179,7 +177,7 @@ class SearchResults:
 
     def print_submission(self, index, enumerated_words, submission_file):
         docs_num = index.documents_number
-        with open(submission_file, 'w') as file:
+        with codecs.open(submission_file, 'w', encoding='utf8') as file:
             file.write('ObjectId,Relevance\n')
             for query_id in range(1, self.cur_query_num):
                 result = self.queries[query_id - 1].search(index, enumerated_words)
@@ -230,7 +228,6 @@ def main():
     index = Index(args.docs_file, enumerated_words)
     # Generate submission file.
     search_results.print_submission(index, enumerated_words, args.submission_file)
-
 
 if __name__ == "__main__":
     main()
